@@ -1,13 +1,13 @@
 import chromadb
 from chromadb.utils import embedding_functions
 
-# Use Ollama embedding model
+
 ollama_ef = embedding_functions.OllamaEmbeddingFunction(
     model_name="nomic-embed-text",
     url="http://localhost:11434"
 )
 
-# Create Chroma client
+
 chroma_client = chromadb.Client()
 
 collection = chroma_client.get_or_create_collection(
