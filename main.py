@@ -22,16 +22,14 @@ UPLOAD_FOLDER = "uploads"
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# ==========================================
-# ADD THIS NEW ROUTE HERE
-# ==========================================
+
 @app.get("/")
 def read_root():
     return {
         "message": "Welcome to the Sentinental Notes API!",
         "hint": "Go to http://127.0.0.1:8000/docs to use the Swagger UI"
     }
-# ==========================================
+
 
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
