@@ -1,54 +1,157 @@
 import React from 'react';
-import { FileText, X } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { FileText, X, BookOpen, FileSearch } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function PDFViewer({ pdfUrl, activePage, onClose }) {
-    if (!pdfUrl) {
-        return (
-            <div className="w-[500px] h-full bg-slate-900 border-l border-slate-800 flex flex-col items-center justify-center p-6 text-center text-slate-500 z-10 hidden xl:flex">
-                <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mb-4">
-                    <FileText className="w-8 h-8 opacity-50" />
-                </div>
-                <h3 className="text-lg font-medium text-slate-400 mb-2">No Document Loaded</h3>
-                <p className="text-sm">Upload a PDF to view it here.</p>
-            </div>
-        );
-    }
-
-    // Append the page hash if we have an active page
-    const viewUrl = activePage ? `${pdfUrl}#page=${activePage}` : pdfUrl;
-
-    return (
-        <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 500, opacity: 1 }}
-            className="w-[500px] h-full bg-slate-900 border-l border-slate-800 flex flex-col z-10 shrink-0 shadow-2xl relative"
+export default function PDFViewer({ pdfUrl, pdfName, activePage, onClose }) {
+  return (
+    <AnimatePresence>
+      {pdfUrl ? (
+        <motion.aside
+          key="viewer"
+          initial={{ width: 0, opacity: 0 }}
+          animate={{ width: 460, opacity: 1 }}
+          exit={{ width: 0, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+          style={{
+            width: 460, minWidth: 460, height: '100%',
+            background: 'var(--bg-surface)',
+            borderLeft: '1px solid var(--border-subtle)',
+            display: 'flex', flexDirection: 'column',
+            zIndex: 10, flexShrink: 0, overflow: 'hidden',
+          }}
         >
-            <div className="h-14 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900 shrink-0">
-                <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-indigo-400" />
-                    <span className="text-sm font-medium text-slate-200">Document Viewer</span>
-                    {activePage && (
-                        <span className="ml-2 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 uppercase tracking-wider">
-                            Page {activePage}
-                        </span>
-                    )}
-                </div>
-                <button
-                    onClick={onClose}
-                    className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
-                >
-                    <X className="w-4 h-4" />
-                </button>
+          {/* Header */}
+          <div style={{
+            height: 50, flexShrink: 0,
+            borderBottom: '1px solid var(--border-subtle)',
+            display: 'flex', alignItems: 'center',
+            padding: '0 14px', gap: 9,
+            background: 'var(--bg-surface)',
+          }}>
+            <div style={{
+              width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+              background: 'var(--accent-dim)',
+              border: '1px solid rgba(99,102,241,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <FileText size={12} color="var(--accent-light)" />
             </div>
 
-            <div className="flex-1 bg-slate-950/50 p-2">
-                <iframe
-                    src={viewUrl}
-                    className="w-full h-full rounded-lg border border-slate-800 bg-white"
-                    title="PDF Viewer"
-                />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontSize: 11.5, fontWeight: 600, color: 'var(--text-primary)',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
+                {pdfName || 'Document Viewer'}
+              </div>
+              {activePage && (
+                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 1 }}>
+                  Viewing page {activePage}
+                </div>
+              )}
             </div>
-        </motion.div>
-    );
+
+            {activePage && (
+              <div style={{
+                padding: '3px 8px', borderRadius: 6,
+                background: 'var(--accent-dim)',
+                border: '1px solid rgba(99,102,241,0.2)',
+                fontSize: 10, fontWeight: 700,
+                color: 'var(--accent-light)',
+                letterSpacing: '0.04em', textTransform: 'uppercase',
+                flexShrink: 0,
+              }}>
+                p.{activePage}
+              </div>
+            )}
+
+            <button
+              onClick={onClose}
+              style={{
+                width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+                background: 'transparent', border: '1px solid transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'var(--text-muted)', transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'var(--bg-elevated)';
+                e.currentTarget.style.borderColor = 'var(--border-default)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'transparent';
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }}
+            >
+              <X size={13} />
+            </button>
+          </div>
+
+          {/* Cited page banner */}
+          <AnimatePresence>
+            {activePage && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                style={{
+                  padding: '7px 14px',
+                  background: 'var(--accent-dim)',
+                  borderBottom: '1px solid rgba(99,102,241,0.15)',
+                  display: 'flex', alignItems: 'center', gap: 7,
+                  flexShrink: 0,
+                }}
+              >
+                <FileSearch size={12} color="var(--accent-light)" />
+                <span style={{ fontSize: 11, color: 'var(--accent-light)', fontWeight: 600 }}>
+                  Jumped to cited page {activePage}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* PDF iframe */}
+          <div style={{ flex: 1, padding: 8, background: 'var(--bg-base)' }}>
+            <iframe
+              src={activePage ? `${pdfUrl}#page=${activePage}` : pdfUrl}
+              style={{
+                width: '100%', height: '100%',
+                borderRadius: 10,
+                border: '1px solid var(--border-subtle)',
+                background: '#fff',
+              }}
+              title="PDF Viewer"
+            />
+          </div>
+        </motion.aside>
+      ) : (
+        <div style={{
+          width: 460, minWidth: 460, height: '100%',
+          background: 'var(--bg-surface)',
+          borderLeft: '1px solid var(--border-subtle)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          gap: 12, padding: 32, textAlign: 'center',
+          zIndex: 10, flexShrink: 0,
+        }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 13,
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border-default)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 4,
+          }}>
+            <BookOpen size={20} color="var(--text-muted)" />
+          </div>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-secondary)' }}>
+            No document open
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.65, maxWidth: 220 }}>
+            Upload a PDF and click a citation to jump to the source page
+          </div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
 }
