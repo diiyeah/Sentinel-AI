@@ -1,4 +1,5 @@
 import os
+import tempfile
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -60,6 +61,36 @@ async def upload_pdf(file: UploadFile = File(...)):
         }
     except Exception as e:
         return {"error": str(e)}
+
+
+@app.post("/transcribe")
+async def transcribe_audio(file: UploadFile = File(...)):
+    temp_path = None
+    try:
+        from groq import Groq
+
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            return {"error": "GROQ_API_KEY is not set"}
+
+        suffix = os.path.splitext(file.filename or "audio.webm")[1] or ".webm"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+            shutil.copyfileobj(file.file, temp_file)
+            temp_path = temp_file.name
+
+        client = Groq(api_key=api_key)
+        with open(temp_path, "rb") as audio_file:
+            response = client.audio.transcriptions.create(
+                file=(file.filename or os.path.basename(temp_path), audio_file.read()),
+                model="whisper-large-v3",
+            )
+
+        return {"text": response.text}
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)
 
 
 @app.get("/ask")

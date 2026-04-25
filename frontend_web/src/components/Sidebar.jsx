@@ -3,8 +3,7 @@ import { FileText, UploadCloud, Layers, Clock, ChevronRight, CheckCircle2, Align
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import MindMap from './MindMap';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_BASE_URL } from '../config';
 
 function fmtBytes(b) {
   if (b < 1024) return b + ' B';

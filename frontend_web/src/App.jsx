@@ -6,8 +6,7 @@ import ChatWindow from './components/ChatWindow';
 import PDFViewer from './components/PDFViewer';
 import InsightCards from './components/InsightCards';
 import QuizPanel from './components/QuizPanel';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_BASE_URL } from './config';
 
 // Fallback quiz used when backend doesn't provide one
 function buildFallbackQuiz(fileName) {

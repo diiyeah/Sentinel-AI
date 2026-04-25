@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Send, Sparkles, FileSearch, BookOpen, Zap, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ChatMessage from './ChatMessage';
+import { API_BASE_URL } from '../config';
 
 const SUGGESTIONS = [
   { icon: <FileSearch size={14} />, text: 'Summarize the key points of this document' },
@@ -9,7 +10,6 @@ const SUGGESTIONS = [
   { icon: <Zap size={14} />, text: 'List the most important definitions' },
 ];
 
-const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const EL_KEY   = import.meta.env.VITE_ELEVENLABS_API_KEY;
 const EL_VOICE = import.meta.env.VITE_ELEVENLABS_VOICE_ID || 'EXAVITQu4vr4xnSDxMaL';
 
@@ -41,14 +41,14 @@ function useVoice({ onTranscript, onSend }) {
           const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
           const formData = new FormData();
           formData.append('file', blob, 'audio.webm');
-          formData.append('model', 'whisper-large-v3');
-          // Use Groq's free Whisper endpoint
-          const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+          const res = await fetch(`${API_BASE_URL}/transcribe`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${GROQ_KEY}` },
             body: formData,
           });
           const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || 'Transcription failed');
+          }
           const transcript = data.text?.trim() || '';
           if (transcript) { onTranscript(transcript); onSend(transcript); }
         } catch (err) {
