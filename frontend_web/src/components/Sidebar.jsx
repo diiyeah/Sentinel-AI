@@ -1,6 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { FileText, UploadCloud, Layers, Clock, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { FileText, UploadCloud, Layers, Clock, ChevronRight, CheckCircle2, AlignLeft, GitBranch, Loader2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+import MindMap from './MindMap';
+
+const API_BASE_URL = 'http://localhost:8000';
 
 function fmtBytes(b) {
   if (b < 1024) return b + ' B';
@@ -11,8 +15,14 @@ function fmtTime(d) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function Sidebar({ isUploading, uploadedFiles, onFileUpload, onSelectFile, activePdfName }) {
-  const [isDragging, setIsDragging] = useState(false);
+export default function Sidebar({ isUploading, uploadedFiles, onFileUpload, onSelectFile, activePdfName, insights }) {
+  const [isDragging, setIsDragging]         = useState(false);
+  const [summaryOpen, setSummaryOpen]       = useState(false);
+  const [mindmapOpen, setMindmapOpen]       = useState(false);
+  const [summary, setSummary]               = useState('');
+  const [loadingSummary, setLoadingSummary] = useState(false);
+  const [mindMapData, setMindMapData]       = useState(null);
+  const [loadingMindMap, setLoadingMindMap] = useState(false);
   const inputRef = useRef(null);
 
   const handleDrop = (e) => {
@@ -21,6 +31,55 @@ export default function Sidebar({ isUploading, uploadedFiles, onFileUpload, onSe
     const file = e.dataTransfer.files[0];
     if (file?.type === 'application/pdf') onFileUpload(file);
   };
+
+  const handleSummary = async () => {
+    if (summaryOpen) { setSummaryOpen(false); return; }
+    setSummaryOpen(true);
+    if (summary) return; // already loaded
+    setLoadingSummary(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/ask`, {
+        params: { question: 'Give a concise summary of this document in 5-6 bullet points.' }
+      });
+      setSummary(res.data.answer || 'Could not generate summary.');
+    } catch {
+      setSummary('Could not generate summary. Make sure a document is uploaded.');
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  const handleMindMap = async () => {
+    if (mindmapOpen) { setMindmapOpen(false); return; }
+    setMindmapOpen(true);
+    if (mindMapData && !mindMapData.error) return; // already loaded
+    setLoadingMindMap(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/mindmap`);
+      setMindMapData(res.data);
+    } catch {
+      setMindMapData({ error: 'Could not generate mind map.' });
+    } finally {
+      setLoadingMindMap(false);
+    }
+  };
+
+  const handleRegenerateMindMap = async () => {
+    setLoadingMindMap(true);
+    setMindMapData(null);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/mindmap`);
+      setMindMapData(res.data);
+    } catch {
+      setMindMapData({ error: 'Could not generate mind map.' });
+    } finally {
+      setLoadingMindMap(false);
+    }
+  };
+
+  const mindMapDataFinal = insights
+    ? mindMapData
+    : null;
 
   return (
     <aside style={{
@@ -177,13 +236,113 @@ export default function Sidebar({ isUploading, uploadedFiles, onFileUpload, onSe
         )}
       </div>
 
+      {/* ── Summary & MindMap quick actions ── */}
+      {uploadedFiles.length > 0 && (
+        <div style={{ padding: '0 12px 12px', flexShrink: 0 }}>
+          <div style={{ height: 1, background: 'var(--border-subtle)', marginBottom: 10 }} />
+          <div className="label" style={{ marginBottom: 8 }}>
+            <AlignLeft size={11} />
+            Quick Actions
+          </div>
+
+          <div style={{ display: 'flex', gap: 6 }}>
+            {/* Summary button */}
+            <button
+              onClick={handleSummary}
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                padding: '7px 0', borderRadius: 8,
+                background: summaryOpen ? 'var(--accent-dim)' : 'var(--bg-elevated)',
+                border: `1px solid ${summaryOpen ? 'rgba(99,102,241,0.3)' : 'var(--border-default)'}`,
+                color: summaryOpen ? 'var(--accent-light)' : 'var(--text-secondary)',
+                fontSize: 11.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { if (!summaryOpen) { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}}
+              onMouseLeave={e => { if (!summaryOpen) { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}}
+            >
+              {loadingSummary ? <Loader2 size={12} style={{ animation: 'spin 0.8s linear infinite' }} /> : <AlignLeft size={12} />}
+              Summary
+            </button>
+
+            {/* Mind Map button */}
+            <button
+              onClick={handleMindMap}
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                padding: '7px 0', borderRadius: 8,
+                background: mindmapOpen ? 'rgba(139,92,246,0.12)' : 'var(--bg-elevated)',
+                border: `1px solid ${mindmapOpen ? 'rgba(139,92,246,0.3)' : 'var(--border-default)'}`,
+                color: mindmapOpen ? '#c4b5fd' : 'var(--text-secondary)',
+                fontSize: 11.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { if (!mindmapOpen) { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}}
+              onMouseLeave={e => { if (!mindmapOpen) { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}}
+            >
+              {loadingMindMap ? <Loader2 size={12} style={{ animation: 'spin 0.8s linear infinite' }} /> : <GitBranch size={12} />}
+              Mind Map
+            </button>
+          </div>
+
+          {/* Summary panel */}
+          <AnimatePresence>
+            {summaryOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                style={{ overflow: 'hidden' }}
+              >
+                <div style={{
+                  marginTop: 8, padding: '10px 12px', borderRadius: 9,
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-default)',
+                  maxHeight: 200, overflowY: 'auto',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                      Summary
+                    </span>
+                    <button onClick={() => { setSummaryOpen(false); setSummary(''); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                  {loadingSummary ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 11 }}>
+                      <Loader2 size={12} style={{ animation: 'spin 0.8s linear infinite' }} />
+                      Generating summary…
+                    </div>
+                  ) : (
+                    <p style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.65, margin: 0, whiteSpace: 'pre-wrap' }}>
+                      {summary}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Mind Map — React Flow fullscreen */}
+          {mindmapOpen && (
+            <MindMap
+              apiData={mindMapDataFinal}
+              isLoading={loadingMindMap}
+              onRegenerate={handleRegenerateMindMap}
+              onClose={() => setMindmapOpen(false)}
+            />
+          )}
+        </div>
+      )}
+
       {/* ── Footer ── */}
       <div style={{
         padding: '10px 14px',
         borderTop: '1px solid var(--border-subtle)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500 }}>Sentinel v1.0</span>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500 }}>Devmox v1.0</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <div style={{
             width: 6, height: 6, borderRadius: '50%',

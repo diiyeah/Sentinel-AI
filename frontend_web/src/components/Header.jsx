@@ -42,7 +42,7 @@ export default function Header({ theme, onToggleTheme, studentLevel, onLevelChan
         </div>
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.3px', color: 'var(--text-primary)', lineHeight: 1.1 }}>
-            Sentinel AI
+            Devmox
           </div>
           <div style={{ fontSize: 9.5, color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.03em' }}>
             Smart Document Assistant
@@ -81,20 +81,6 @@ export default function Header({ theme, onToggleTheme, studentLevel, onLevelChan
       </div>
 
       <div style={{ flex: 1 }} />
-
-      {/* ── AMD badge ── */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 5,
-        padding: '4px 9px', borderRadius: 7,
-        background: 'rgba(239,68,68,0.07)',
-        border: '1px solid rgba(239,68,68,0.18)',
-        flexShrink: 0,
-      }}>
-        <Cpu size={11} color="#f87171" />
-        <span style={{ fontSize: 9.5, fontWeight: 700, color: '#f87171', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-          AMD Ryzen AI
-        </span>
-      </div>
 
       {/* ── Level selector ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>

@@ -72,16 +72,16 @@ export default function InsightCards({ insights }) {
         onClick={() => setOpen(o => !o)}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '9px 18px', background: 'transparent', border: 'none', cursor: 'pointer',
+          padding: '11px 18px', background: 'transparent', border: 'none', cursor: 'pointer',
         }}
       >
-        <div className="label">
-          <Lightbulb size={11} />
+        <div className="label" style={{ fontSize: 11, letterSpacing: '0.07em' }}>
+          <Lightbulb size={12} />
           Document Insights
         </div>
         {open
-          ? <ChevronUp size={13} color="var(--text-muted)" />
-          : <ChevronDown size={13} color="var(--text-muted)" />}
+          ? <ChevronUp size={14} color="var(--text-muted)" />
+          : <ChevronDown size={14} color="var(--text-muted)" />}
       </button>
 
       <AnimatePresence initial={false}>
@@ -96,8 +96,8 @@ export default function InsightCards({ insights }) {
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 8,
-              padding: '0 14px 12px',
+              gap: 10,
+              padding: '4px 16px 16px',
             }}>
               {CARDS.map((card, i) => {
                 const Icon = card.icon;
@@ -109,16 +109,16 @@ export default function InsightCards({ insights }) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     style={{
-                      padding: '11px 12px',
-                      borderRadius: 11,
+                      padding: '13px 14px',
+                      borderRadius: 12,
                       background: 'var(--ic-bg)',
                       border: '1px solid var(--ic-border)',
-                      display: 'flex', flexDirection: 'column', gap: 7,
+                      display: 'flex', flexDirection: 'column', gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <Icon size={12} color="var(--ic-text)" />
-                      <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--ic-text)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Icon size={13} color="var(--ic-text)" />
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--ic-text)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                         {card.label}
                       </span>
                     </div>

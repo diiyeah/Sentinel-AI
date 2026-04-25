@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { User, Sparkles, BookMarked } from 'lucide-react';
+import { User, Sparkles, BookMarked, Volume2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function ChatMessage({ message, onCitationClick }) {
+export default function ChatMessage({ message, onCitationClick, onSpeak, onStopSpeak, isSpeaking }) {
   const isUser = message.role === 'user';
 
   return (
@@ -57,7 +57,7 @@ export default function ChatMessage({ message, onCitationClick }) {
               <ReactMarkdown>{message.content}</ReactMarkdown>
             </div>
 
-            {/* Citations */}
+            {/* Citations + speak */}
             {message.citations?.length > 0 && (
               <div style={{
                 marginTop: 11, paddingTop: 9,
@@ -82,6 +82,26 @@ export default function ChatMessage({ message, onCitationClick }) {
                     p.{page}
                   </button>
                 ))}
+                {/* Speak button */}
+                {onSpeak && (
+                  <button
+                    onClick={() => isSpeaking ? onStopSpeak() : onSpeak(message.content.replace(/[#*`_~\[\]]/g, '').slice(0, 500))}
+                    title={isSpeaking ? 'Stop' : 'Read aloud'}
+                    style={{
+                      marginLeft: 'auto',
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      padding: '2px 8px', borderRadius: 6,
+                      background: isSpeaking ? 'rgba(245,158,11,0.12)' : 'var(--bg-active)',
+                      border: `1px solid ${isSpeaking ? 'rgba(245,158,11,0.3)' : 'var(--border-subtle)'}`,
+                      color: isSpeaking ? '#fbbf24' : 'var(--text-muted)',
+                      fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                      fontFamily: 'inherit', transition: 'all 0.15s',
+                    }}
+                  >
+                    <Volume2 size={10} />
+                    {isSpeaking ? 'Stop' : 'Read'}
+                  </button>
+                )}
               </div>
             )}
           </>

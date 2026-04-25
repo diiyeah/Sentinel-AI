@@ -103,12 +103,18 @@ export default function App() {
         setActivePdfUrl(fileUrl);
         setActivePdfName(file.name);
         setActivePage(1);
+
+        // Use real page count from backend, then fetch real topics/terms from AI
+        const pageCount = res.data.pages || '?';
         setInsights({
-          summary: `This document covers key academic concepts. Use the chat to ask questions and get cited answers.`,
-          topics: ['Core Concepts', 'Key Definitions', 'Important Principles', 'Applications'],
-          definitions: ['Process', 'Algorithm', 'System', 'Module', 'Interface'],
-          pageCount: '~20+ pages',
+          summary: `Analysing document…`,
+          topics: ['Loading…'],
+          definitions: ['Loading…'],
+          pageCount: `${pageCount} pages`,
         });
+
+        // Fetch real insights from AI
+        fetchInsights(pageCount);
 
         // Auto-generate quiz after upload
         autoGenerateQuiz(file.name);
@@ -121,6 +127,36 @@ export default function App() {
       }]);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const fetchInsights = async (pageCount) => {
+    try {
+      // Ask AI for topics, key terms, and summary in one shot
+      const [topicsRes, termsRes, summaryRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/ask`, { params: { question: 'List exactly 4 main topics covered in this document. Reply with only a comma-separated list, no numbering, no extra text.' } }),
+        axios.get(`${API_BASE_URL}/ask`, { params: { question: 'List exactly 5 key technical terms or definitions from this document. Reply with only a comma-separated list, no numbering, no extra text.' } }),
+        axios.get(`${API_BASE_URL}/ask`, { params: { question: 'Write a single sentence summary of this document in under 20 words.' } }),
+      ]);
+
+      const topics = topicsRes.data.answer
+        ? topicsRes.data.answer.split(',').map(t => t.trim()).filter(Boolean).slice(0, 4)
+        : ['Core Concepts', 'Key Definitions', 'Principles', 'Applications'];
+
+      const definitions = termsRes.data.answer
+        ? termsRes.data.answer.split(',').map(t => t.trim()).filter(Boolean).slice(0, 5)
+        : ['Term 1', 'Term 2', 'Term 3', 'Term 4', 'Term 5'];
+
+      const summary = summaryRes.data.answer || 'Upload complete. Ask questions to explore this document.';
+
+      setInsights({ summary, topics, definitions, pageCount: `${pageCount} pages` });
+    } catch {
+      setInsights({
+        summary: 'Document indexed. Ask questions to explore the content.',
+        topics: ['Core Concepts', 'Key Definitions', 'Principles', 'Applications'],
+        definitions: ['Term 1', 'Term 2', 'Term 3', 'Term 4', 'Term 5'],
+        pageCount: `${pageCount} pages`,
+      });
     }
   };
 
@@ -199,6 +235,7 @@ export default function App() {
           onFileUpload={handleFileUpload}
           onSelectFile={handleSelectFile}
           activePdfName={activePdfName}
+          insights={insights}
         />
 
         <div className="center-col">
