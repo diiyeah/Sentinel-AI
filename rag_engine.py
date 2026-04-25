@@ -2,10 +2,16 @@ import os
 from groq import Groq
 from vector_store import query_collection
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+def _get_client():
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise RuntimeError("GROQ_API_KEY is not set")
+    return Groq(api_key=api_key)
 
 
 def generate_answer(question: str):
+    client = _get_client()
     results = query_collection(question)
 
     context = ""
